@@ -1,48 +1,106 @@
 /*******************************************************************
- *  
- *  Classe principal contendo os imports e logica combinacional
- *  
- *  @autor Jose Augusto Gorck
- *  @since 23/03/18
- *  
- */
 
-/***************** LIST OF PINS BEING USED ******************* 
- * A0  - 
- * A1  - 
- * D0  - Bluetooth/RX
- * D1  - Bluetooth/TX
- * D4  - 
- */
- 
- 
- /********************** GLOBAL VARIABLES *********************/
+    Classe principal contendo os imports e logica combinacional
+
+    @autor Jose Augusto Gorck
+    @since 23/03/18
+
+*/
+
+/***************** LIST OF PINS BEING USED *******************
+   A0  -
+   A1  -
+   D0  - Bluetooth/RX
+   D1  - Bluetooth/TX
+   D4  -
+*/
+
+
+/********************** GLOBAL VARIABLES *********************/
 #define SERIAL_BAUD_RATE 9600       //Serial baud rate 
 
+#define SOH 0x01
+#define STX 0x02
+#define ETX 0x03
+#define EOT 0x04
+#define ETB 0x17
+#define FS 0x1C
+#define SOH 0x02
 
-#include <Wire.h>
+#define SENDOR_TYPE 0x01;
 
-  
+#include <SPI.h>
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+
+long lastUpdate = 0;
+
+boolean messageAliveSended = false;
+
+byte server[] = { 192, 168, 0, 111 };
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xAA};
+
+unsigned int localPort = 1903;
+
+
+char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
+
+EthernetUDP Udp;
+
+
+//structure for handling KD current state
+struct sensor {
+  unsigned long dataConnect; //offset for time discretization
+  byte mac[6];
+  byte ip[4];
+  int sensorType;
+};
+
+sensor sensorInfo;
+
+
+
+
+
 void setup() {
-  Wire.begin(8);                // join i2c bus with address #8
-  Wire.onReceive(receiveEvent); // register event
-  Serial.begin(9600);           // start serial for output
+  // start the Ethernet and UDP:
+  Ethernet.begin(mac, IPAddress(192, 168, 0, 222));
+  Serial.begin(9600);
+  Udp.begin(6666);
 }
 
-void loop() {  
+void loop() {
   
-  delay(100);  
-
+  stateMachine();
+  delay(10);
 }
 
+void stateMachine(char cmd) {
 
-// function that executes whenever data is received from master
-// this function is registered as an event, see setup()
-void receiveEvent(int howMany) {
-  while (1 < Wire.available()) { // loop through all but the last
-    char c = Wire.read(); // receive byte as a character
-    Serial.print(c);         // print the character
+  switch (cmd) {//identify and apply the command
+    case '0':
+      break;
+    case '1':
+      break;
+    case '2':
+      break;
+    case '3':
+      break;
+    case '4':
+      break;
+    case '5':
+      break;
+    case '6':
+      break;
+    case '7':
+      break;
+    default:
+      break;
   }
-  int x = Wire.read();    // receive byte as an integer
-  Serial.println(x);         // print the integer
 }
+
+
+
+
+
+
