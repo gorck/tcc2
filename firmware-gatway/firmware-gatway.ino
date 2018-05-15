@@ -7,21 +7,15 @@
 
 */
 
-/***************** LIST OF PINS BEING USED *******************
-   A0  -
-   A1  -
-   D0  - Bluetooth/RX
-   D1  - Bluetooth/TX
-   D4  -
-*/
-
-
-/********************** GLOBAL VARIABLES *********************/
+/********************** LIBS *********************/
 
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 
+
+
+/********************** DEFINE VARIABLES *********************/
 
 #define SERIAL_BAUD_RATE 9600       //Serial baud rate 
 
@@ -40,20 +34,27 @@
 
 #define CMD_LIST_SENSOR 0x0B // Lista de sensores recebida pelo gateway
 
-
-
 #define CMD_DATA 0x0A // novo dado
 
-//class Sensor {
-//  public:
-//    //    Sensor();
-//    unsigned long millisOffset; //offset for time discretization
-//    byte mac[6];
-//    byte ip[4];
-//    bool conected;
-//    unsigned int remPort;
-//    unsigned int sensorType;
-//};
+#define MAX_DATA_SENSOR 5
+#define MAX_SENSOR 5
+
+
+/********************** GLOBAL VARIABLES *********************/
+struct DataInfo {
+  unsigned long timeAquisition = 0;
+  int info = 0;
+};
+
+
+struct Sensor {
+  unsigned long timeToGetData = 0;
+  unsigned long lastTimeData = 0;
+  int typeData = 0;
+  IPAddress ip;
+  DataInfo dataInfo [MAX_DATA_SENSOR];
+};
+
 
 
 byte server[] = { 192, 168, 0, 111 };
@@ -69,6 +70,8 @@ const int BUFFER_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of
 byte packetBuffer[BUFFER_PACKET_SIZE];
 byte replayBuffer[BUFFER_PACKET_SIZE];
 
+Sensor sensorList[MAX_SENSOR];
+
 
 //unsigned int localPort = 1903;
 unsigned int remPort = 5544;
@@ -76,11 +79,6 @@ unsigned int remPort = 5544;
 unsigned int discoveryPort = 6667;
 
 unsigned int dataPort = 666;
-
-//const int maxSensor = 5;
-
-//Sensor sensor1, sensor2, sensor3, sensor4, sensor5;
-//Sensor sensorList[maxSensor] {sensor1, sensor2, sensor3, sensor4, sensor5};
 
 EthernetUDP udp; // discoveryServer
 
@@ -96,19 +94,16 @@ void setup() {
 }
 
 void loop() {
-udp.begin(discoveryPort);
+  udp.begin(discoveryPort);
   if (udp.parsePacket()) {
     Serial.println("Recebido novo pacote ");
     newPacketRecived();
   }
-  printAllSensorConected();
-  delay(500);
 }
 
 void newPacketRecived() {
   Serial.println("Novo Pacote........");
   udp.read(packetBuffer, BUFFER_PACKET_SIZE);
-
 
   int action = getCmdMessage();
 
@@ -124,48 +119,19 @@ void newPacketRecived() {
     case 10:// new data sensro
       break;
   }
-
-
 }
 
-/*
-  void responseNewSensor(EthernetUDP udp) {
 
-  Serial.print("RECEBIDO DE: IP ");
-  Serial.print(udp.remoteIP());
-  Serial.print(" - porta: ");
-  Serial.println(udp.remotePort());
-  Serial.println("DADOS DO NOVO SENSOR: ");
-  Serial.print("TAMANHO DO PACOTE: ");
-  Serial.println(UDP_TX_PACKET_MAX_SIZE);
-
-  char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
-  udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-  Serial.println(packetBuffer, HEX);
-
+void addNewSensor(long timeToGetData, int sensorType) {
+  Serial.println("Adicionando um novo sensor na lista ");
+  int pos = getNextPossition();
+  if (pos == -1) {
+    Serial.println("Arrai está cheio");
+    return;
   }
-*/
-
-void addNewSensor() {
-  //  Serial.println("Adicionando um novo sensor na lista ");
-  //  Sensor sensor = Sensor();
-  //  sensor.ip[4] = udp.remoteIP() ;
-  //  sensor.conected = true;
-  //  sensor.remPort = udp.remotePort();
-  //  sensor.sensorType = 1;
-  //  sensorList[0] = sensor;
-}
-
-int printAllSensorConected() {
-  int totalConected = 0;
-  //  for (int i = 0 ; i < maxSensor ; i++) {
-  //    if (sensorList[i].conected) {
-  //      totalConected++;
-  //    }
-  //  }
-  Serial.print("Total de sensores conectados: ");
-  Serial.println(totalConected);
-  return totalConected;
+  sensorList[pos].timeToGetData = timeToGetData;
+  sensorList[pos].typeData = sensorType;
+  sensorList[pos].ip = IPAddress(udp.remoteIP());
 }
 
 

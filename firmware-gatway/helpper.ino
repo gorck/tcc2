@@ -61,3 +61,10 @@ void makeIpAckPacket() {
   replayBuffer[13] = EOT;
 }
 
+void makePacketToGetData(int sensor) {
+  Serial.println("MONTANDO DE REQUISIÇÃO DE DADO A SENSOR ");
+
+  replayBuffer[0] = SOH;
+  replayBuffer[13] = EOT;
+}
+
