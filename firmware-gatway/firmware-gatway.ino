@@ -12,6 +12,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
+#include <stdio.h>
 
 
 
@@ -26,15 +27,26 @@
 #define ETB 0x17 //end od trans block
 #define FS 0x1C //file separator
 
-#define CMD_DISCOVERY 0x00 // busca novo IP
-#define CMD_DISCOVERY_OFFER 0x01 // Oferece um novo IP
-#define CMD_DISCOVERY_REQUEST 0x02 // Requisita o IP
-#define CMD_DISCOVERY_ACK 0x03 // Aceita o novo IP
+
+/*
+   Discovery Comands Type
+*/
+#define CMD_DISCOVERY 0x01 // gateway discovery
+#define CMD_DISCOVERY_ACK 0x02 // gateway response of discovery
+
+/*
+   Request and Response Comands Type
+*/
+#define CMD_REQUEST_NODE_STATUS 0x03 // Requisição status do nodo
+#define CMD_RESPONSE_NODE_STATUS 0x04 // Requisição de dados do sensor
+#define CMD_REQUEST_NODE_DATA 0x05 // Requisição status do nodo
+#define CMD_RESPONSE_NODE_DATA 0x06 // Requisição de dados do sensor
 
 
 #define CMD_LIST_SENSOR 0x0B // Lista de sensores recebida pelo gateway
-
 #define CMD_DATA 0x0A // novo dado
+
+#define SENDOR_TYPE  99
 
 #define MAX_DATA_SENSOR 5
 #define MAX_SENSOR 5
@@ -51,7 +63,8 @@ struct Sensor {
   unsigned long timeToGetData = 0;
   unsigned long lastTimeData = 0;
   int typeData = 0;
-  IPAddress ip;
+  byte mac[6];
+  bool isAwake = false;
   DataInfo dataInfo [MAX_DATA_SENSOR];
 };
 
@@ -78,7 +91,7 @@ unsigned int remPort = 5544;
 
 unsigned int discoveryPort = 6667;
 
-unsigned int dataPort = 666;
+unsigned int dataPort = 6666;
 
 EthernetUDP udp; // discoveryServer
 
@@ -86,11 +99,17 @@ IPAddress broadcastIP(255, 255, 255, 255);
 IPAddress newSensorIP;
 
 void setup() {
-  // start the Ethernet and UDP:
-  Ethernet.begin(mac, IPAddress(192, 168, 0, 222));
   Serial.begin(9600);
+  // start the Ethernet and UDP:
+  Serial.println("START UP Centralizador");
+  Ethernet.begin(mac, IPAddress(192, 168, 0, 222));
+  Serial.print("Iniciando UDP na porta:");
+  Serial.println(discoveryPort);
   udp.begin(discoveryPort);
 
+  memset(sensorList, 0, sizeof(sensorList));
+
+  Serial.println("START UP Finalizado");
 }
 
 void loop() {
@@ -99,6 +118,9 @@ void loop() {
     Serial.println("Recebido novo pacote ");
     newPacketRecived();
   }
+
+
+    requestData();
 }
 
 void newPacketRecived() {
@@ -106,33 +128,46 @@ void newPacketRecived() {
   udp.read(packetBuffer, BUFFER_PACKET_SIZE);
 
   int action = getCmdMessage();
+  Serial.print("Action:");
+  Serial.println(action);
 
   switch (action) {            //identify and apply the command
     case 0: // ipDiscovery
-      Serial.println("Pacote de ipDiscovery recebido");
-      newSensorIP = udp.remoteIP();
-      sendIpOffer();
+      //do nothing
       break;
-    case 1: // ipDiscoveryf
-      sendIpAck();
+    case CMD_DISCOVERY: // ipDiscoveryf
+      sendAutenticationAck();
+      break;
+    case CMD_RESPONSE_NODE_STATUS: // CMD_REQUEST_DATA
+      processNodeStatus();
       break;
     case 10:// new data sensro
       break;
+    default:
+      break;
   }
 }
 
 
-void addNewSensor(long timeToGetData, int sensorType) {
-  Serial.println("Adicionando um novo sensor na lista ");
-  int pos = getNextPossition();
-  if (pos == -1) {
-    Serial.println("Arrai está cheio");
-    return;
+
+
+void requestData() {
+  //  Serial.print("###TAMANHO DA LISTA" );
+  //  Serial.println(sizeof(sensorList));
+  for (int i = 0; i < MAX_SENSOR; i++) {
+    if (sensorList[i].isAwake) {
+      Serial.print("Requisitando dados ao sensor: ");
+      Serial.print(i);
+      Serial.print("isAwake: ");
+      Serial.println( sensorList[i].isAwake);
+      makePacketToGetData(i);
+
+    }
   }
-  sensorList[pos].timeToGetData = timeToGetData;
-  sensorList[pos].typeData = sensorType;
-  sensorList[pos].ip = IPAddress(udp.remoteIP());
+  delay(500);
 }
+
+
 
 
 

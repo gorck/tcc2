@@ -5,6 +5,6 @@
 
 
 float getSensorData(){
-  return 0.0;
+  return 15.0;
 }
 

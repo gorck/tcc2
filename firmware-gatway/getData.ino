@@ -22,8 +22,7 @@ int getNextPossition() {
 }
 
 void getDataFromSensor(){
-
-  
+ 
   sendPacket();
 }
 
