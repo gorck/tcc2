@@ -4,6 +4,9 @@
 */
 
 
+/**
+ * Dado do sensor capturado
+ */
 float getSensorData(){
   return 15.0;
 }

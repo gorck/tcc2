@@ -4,7 +4,10 @@
 */
 
 
-
+/**
+   Método para capturar a ação a ser realizada pelo
+   nodo de sensoriamento
+*/
 void wrapperAnswer() {
   Serial.println("RECEBENDO UMA NOVA MENSAGEM");
   for (int x = 0; x < BUFFER_PACKET_SIZE; x++) {
@@ -21,6 +24,7 @@ void wrapperAnswer() {
     return;
   }
 
+  //seta o mac do centralizador na memória
   setMacServer();
 
   if (CMD_DISCOVERY_ACK == packetBuffer[13]) {
@@ -38,16 +42,24 @@ void wrapperAnswer() {
   }
 }
 
+/**
+   Método para guardar na memória o MAC do centralizador
+
+   Dado necessário para enviar a resposta de volta
+*/
 void setMacServer() {
-  macServer[0] = replayBuffer[7];
-  macServer[1] = replayBuffer[8];
-  macServer[2] = replayBuffer[9];
-  macServer[3] = replayBuffer[10];
-  macServer[4] = replayBuffer[11];
-  macServer[5] = replayBuffer[12];
+  int offSet = 7;
+  macServer[0] = packetBuffer[offSet];
+  macServer[1] = packetBuffer[offSet + 1];
+  macServer[2] = packetBuffer[offSet + 2];
+  macServer[3] = packetBuffer[offSet + 3];
+  macServer[4] = packetBuffer[offSet + 4];
+  macServer[5] = packetBuffer[offSet + 5];
 }
 
-
+/**
+   Método para montar o pacote de Dispovery
+*/
 void makeCmdDiscoveryPacket() {
   clearBuffer();
   replayBuffer[0] = SOH;
@@ -69,6 +81,10 @@ void makeCmdDiscoveryPacket() {
   replayBuffer[16] = EOT;
 }
 
+/**
+   Método para montar o pacote de resposta a requisição
+   de um dado do sensor
+*/
 void makeSensorResponsePacket() {
   clearBuffer();
   replayBuffer[0] = SOH;
@@ -95,7 +111,12 @@ void makeSensorResponsePacket() {
 
 }
 
-
+/**
+   Método para montar o pacote de envio do status do nodo
+   Caso ele esteja acordadno, é enviado no payload da mensagem
+   o valor de um. Caso o nodo esteja indor dormir, será enviado
+   o valor de zero;
+*/
 void makeNodeStatussPacket(int st) {
   clearBuffer();
   replayBuffer[0] = SOH;
@@ -119,13 +140,17 @@ void makeNodeStatussPacket(int st) {
 
 }
 
+/**
+   Método para verificar se o MAC recebido é do nodo
+   Caso não seja, é descartada a mensagem
+*/
 bool checkAnswerIsEqualMac() {
   int offSet = 1;
-  Serial.println("Autenticando MAC");
-  Serial.println(packetBuffer[0 + offSet]);
-  Serial.println(mac[0]);
-  Serial.println(packetBuffer[1 + offSet]);
-  Serial.println(mac[1]);
+  //  Serial.println("Autenticando MAC");
+  //  Serial.println(packetBuffer[0 + offSet]);
+  //  Serial.println(mac[0]);
+  //  Serial.println(packetBuffer[1 + offSet]);
+  //  Serial.println(mac[1]);
   return ( packetBuffer[0 + offSet] == mac[0] &&
            packetBuffer[1 + offSet] == mac[1] &&
            packetBuffer[2 + offSet] == mac[2] &&
@@ -134,6 +159,9 @@ bool checkAnswerIsEqualMac() {
            packetBuffer[5 + offSet] == mac[5]);
 }
 
+/**
+   Método que limpa o buffer de envio. É setado todos os bytes em Zero
+*/
 void clearBuffer() {
   for (int x = 0; x < BUFFER_PACKET_SIZE; x++) {
     replayBuffer[x] = 0x00;

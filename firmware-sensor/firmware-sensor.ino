@@ -1,10 +1,8 @@
 /*******************************************************************
-
     Classe principal contendo os imports e logica combinacional
 
     @autor Jose Augusto Gorck
     @since 23/03/18
-
 */
 
 /***************** LIST OF PINS BEING USED *******************
@@ -63,9 +61,11 @@ byte macServer[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 IPAddress broadcast_ip(255, 255, 255, 255);
 IPAddress server_ip;
 
+/********************** DEFAULT PORTS *********************/
 int discovery_response_port = 6666;
 int discovery_port = 6667;
 
+/********************** UDP OBJECT *********************/
 EthernetUDP udp;
 
 const int BUFFER_PACKET_SIZE = 48;
@@ -85,6 +85,9 @@ struct state {
 };
 state KDState;
 
+/**
+   Configurações de statur do microcontrolador
+*/
 void setup() {
 
   Ethernet.begin(mac, IPAddress(0, 0, 0, 0));
@@ -99,13 +102,18 @@ void setup() {
 
 }
 
+
+/**
+   Loop principal do programa, verifica se possui alguma mensagem,
+   caso tenha, realiza o parse dela e verifica o seu comando.
+*/
 void loop() {
 
   int packetSize = udp.parsePacket();
   if (packetSize) {
 
-    Serial.print("Resposta do servidor: ");
-    Serial.println(udp.remoteIP());
+//    Serial.print("Resposta do servidor: ");
+//    Serial.println(udp.remoteIP());
     udp.read(packetBuffer, BUFFER_PACKET_SIZE);
     Serial.println("Pacote recebido: ");
     for (int i = 0; i < BUFFER_PACKET_SIZE; i++) {
@@ -117,7 +125,10 @@ void loop() {
   stateMachine();
 }
 
-
+/**
+ * Máquina de estádos para controlodar as requisições bem como
+ * a autenticação com o centralozador
+ */
 void stateMachine() {
   switch (KDState.action) {
     case 1: //discoveryng IP
@@ -131,8 +142,8 @@ void stateMachine() {
       Serial.println(CMD_REQUEST_NODE_DATA);
       KDState.last_data_sensor.data = getSensorData();
       sendDataSensor();
-      delay(200);
-      sendNodeStatus(0);
+      delay(50);
+//      sendNodeStatus(0);
       KDState.action = 8;
       break;
     case CMD_RESPONSE_NODE_STATUS: //message that informs the sensor node is awake or alive
@@ -153,6 +164,10 @@ void stateMachine() {
 }
 
 
+/**
+ * Máquina de estados adicional para o controle da autenticação
+ * com o centralizador
+ */
 void sMDiscoveryIP() {
   Serial.println("sMDiscoveryIP()");
   Serial.print("KDState.status_discovery =");
@@ -160,7 +175,7 @@ void sMDiscoveryIP() {
   switch (KDState.status_discovery) {
     case 0: // busca IP
       discoveryGateway();
-      delay(200);
+//      delay(200);
       break;
     case 1:// Autenticação recebida
       KDState.status_discovery = 4; //concluido

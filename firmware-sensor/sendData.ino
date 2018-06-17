@@ -3,26 +3,6 @@
     @since 11/04/18
 */
 
-//
-///**
-//   Responde o servidor de autenticação
-//*/
-//void sendCmdDiscoveryRequestPacket() {
-//  if (KDState.status_discovery != 2) {
-//    Serial.println("Não pode ser enviado o pacote de Request...");
-//    return;
-//  }
-//  Serial.println("Enviado Request do IP Discovery");
-//  Serial.println(broadcast_ip);
-//  Serial.println(discovery_port);
-//  makeCmdDiscoveryRequestPacket();
-//  for (int i = 0; i < DISCOVERY_PACKET_SIZE; i++) {
-//    Serial.print(replayBuffer[i], HEX);
-//  }
-//  Serial.println(" ");
-//  sendPacket();
-//}
-
 /**
    Envia uma mensagem em broadcast a procura do servidor de autenticação
 */
@@ -33,11 +13,18 @@ void discoveryGateway() {
   sendPacket();
 }
 
+/**
+ * Método para montar o pacote de envio do dado do sensor
+ * e enviar o pacote
+ */
 void sendDataSensor() {
   makeSensorResponsePacket();
   sendPacket();
 }
 
+/**
+ * Método para montar o pacote de status do nodo e envia-lo
+ */
 void sendNodeStatus(int statusNode) {
   Serial.print("ENVIADO PACOTE DE STATUS DO NODO: ");
   Serial.println(statusNode);
@@ -45,6 +32,9 @@ void sendNodeStatus(int statusNode) {
   sendPacket();
 }
 
+/*
+ * Método implementado para enviar a mensagem na rede.
+ */
 void sendPacket() {
 
   Serial.println("ENVIADO PACOTE....");
