@@ -82,7 +82,7 @@ void sendAutenticationAck() {
 
    Após o envio, é realizada o clear das informações já salvas.
 */
-void getAllDataToGateway() {
+void sendAllDataToGateway() {
 
   //  Serial.println("###PREPARANDO DADO A SER ENVIADO####");
   int messageTotalSize = ((sizeof(DataInfo) * MAX_DATA_SENSOR * MAX_SENSOR) + (MAX_SENSOR * 6));

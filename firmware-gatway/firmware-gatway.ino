@@ -232,7 +232,7 @@ void newPacketRecived() {
       processNodeStatus();
       break;
     case CMD_REQUEST_DATA_LIST: //Comando de requisição de todos os dados do sensor
-      getAllDataToGateway();
+      sendAllDataToGateway();
       break;
     case CMD_CONFIG_SENSOR_TIMES: //Comando de configuração de tempos de aquisição dos sensores
       processConfigPacket();
